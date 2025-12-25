@@ -135,14 +135,20 @@ public class InventoryForm extends JFrame{
     }
 
     private void deleteProduct() {
-        String sku = textSku.getText();
-        Product product = productService.getProductBySku(sku);
+        var row = productsTable.getSelectedRow();
 
-        if (product != null) {
-            productService.deleteProduct(product);
-            displayMessege("Producto eliminado correctamente");
+        if (row != -1) {
+            String sku = textSku.getText();
+            Product product = productService.getProductBySku(sku);
+
+            if (product != null) {
+                productService.deleteProduct(product);
+                displayMessege("Producto eliminado correctamente");
+            } else {
+                displayMessege("Producto no encontrado");
+            }
         } else {
-            displayMessege("Producto no encontrado");
+            displayMessege("Selecciona un producto para eliminar");
         }
 
         clearForm();
