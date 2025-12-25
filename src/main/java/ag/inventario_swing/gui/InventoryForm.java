@@ -7,6 +7,11 @@ import org.springframework.stereotype.Component;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Component
@@ -16,16 +21,26 @@ public class InventoryForm extends JFrame{
     private JTextField textSku;
     private JTextField textName;
     private JTextField textPrice;
-    private JButton guardarButton;
-    private JButton eliminarButton;
-    private JButton limpiarButton;
+    private JButton saveButton;
+    private JButton deleteButton;
+    private JButton clearButton;
     private final ProductService productService;
     private DefaultTableModel modelTableProducts;
+    private Long idProduct;
 
     @Autowired
     public InventoryForm(ProductService productService) {
         this.productService = productService;
         initializeForm();
+        saveButton.addActionListener(actionEvent -> saveProduct());
+        productsTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                loadSelectProduct();
+            }
+        });
+        clearButton.addActionListener(actionEvent -> clearForm());
     }
 
     private void initializeForm() {
@@ -56,5 +71,69 @@ public class InventoryForm extends JFrame{
             };
             modelTableProducts.addRow(rowProduct);
         });
+    }
+
+    private void saveProduct() {
+        if (textSku.getText().isEmpty()) {
+            displayMessege("Ingresa un sku");
+            textSku.requestFocusInWindow();
+            return;
+        }
+        if (textName.getText().isEmpty()) {
+            displayMessege("Ingresa un nombre");
+            textName.requestFocusInWindow();
+            return;
+        }
+        if (textPrice.getText().isEmpty()) {
+            displayMessege("Ingresa un precio");
+            textPrice.requestFocusInWindow();
+            return;
+        }
+
+        BigDecimal price = BigDecimal.ZERO;
+        try {
+            price = new BigDecimal(textPrice.getText());
+
+            if (price.signum() <= 0) {
+                displayMessege("Ingresa un numero positivo");
+                textPrice.requestFocusInWindow();
+                return;
+            }
+        } catch (NumberFormatException e) {
+            displayMessege("Ingresa solo numeros");
+        }
+
+        String sku = textSku.getText();
+        String name = textName.getText();
+        Product product = new Product(idProduct, sku, name, price);
+        productService.saveProduct(product);
+
+        clearForm();
+        listProducts();
+    }
+
+    private void loadSelectProduct() {
+        var row = productsTable.getSelectedRow();
+
+        if (row != -1) {
+            String id = productsTable.getModel().getValueAt(row, 0).toString();
+            idProduct = Long.parseLong(id);
+            String sku = productsTable.getModel().getValueAt(row, 1).toString();
+            textSku.setText(sku);
+            String name = productsTable.getModel().getValueAt(row, 2).toString();
+            textName.setText(name);
+            String price = productsTable.getModel().getValueAt(row, 3).toString();
+            textPrice.setText(price);
+        }
+    }
+
+    private void clearForm() {
+        textSku.setText("");
+        textName.setText("");
+        textPrice.setText("");
+    }
+
+    private void displayMessege(String messege) {
+        JOptionPane.showMessageDialog(this, messege);
     }
 }
