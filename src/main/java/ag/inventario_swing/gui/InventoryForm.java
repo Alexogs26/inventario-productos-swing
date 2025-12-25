@@ -41,6 +41,7 @@ public class InventoryForm extends JFrame{
             }
         });
         clearButton.addActionListener(actionEvent -> clearForm());
+        deleteButton.addActionListener(actionEvent -> deleteProduct());
     }
 
     private void initializeForm() {
@@ -101,6 +102,7 @@ public class InventoryForm extends JFrame{
             }
         } catch (NumberFormatException e) {
             displayMessege("Ingresa solo numeros");
+            return;
         }
 
         String sku = textSku.getText();
@@ -108,6 +110,11 @@ public class InventoryForm extends JFrame{
         Product product = new Product(idProduct, sku, name, price);
         productService.saveProduct(product);
 
+        if (idProduct == null) {
+            displayMessege("Se agrego el producto");
+        } else {
+            displayMessege("Se modifico el producto");
+        }
         clearForm();
         listProducts();
     }
@@ -127,10 +134,27 @@ public class InventoryForm extends JFrame{
         }
     }
 
+    private void deleteProduct() {
+        String sku = textSku.getText();
+        Product product = productService.getProductBySku(sku);
+
+        if (product != null) {
+            productService.deleteProduct(product);
+            displayMessege("Producto eliminado correctamente");
+        } else {
+            displayMessege("Producto no encontrado");
+        }
+
+        clearForm();
+        listProducts();
+    }
+
     private void clearForm() {
         textSku.setText("");
         textName.setText("");
         textPrice.setText("");
+        idProduct = null;
+        productsTable.getSelectionModel().clearSelection();
     }
 
     private void displayMessege(String messege) {
